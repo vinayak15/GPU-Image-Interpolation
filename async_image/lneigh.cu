@@ -1,0 +1,34 @@
+//Asynchronous data transfer for further optimization in Linear interpolation  
+//here code is same as compared to shared memory optimization except for few changes
+
+
+#include<Windows.h>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include<cuda.h>
+#include <stdio.h>
+#include<time.h>
+#include <iostream>
+#include<device_atomic_functions.h>
+#include<device_functions.h>
+
+//here we are using flag to determine which part of image is to be interpolated
+
+__global__ void lneigh(unsigned char *new_image, const unsigned char *image, int rows, int cols, int flag)
+{
+	
+	int index;
+	int	col = threadIdx.x + blockDim.x*blockIdx.x;
+	int row = threadIdx.y + blockDim.y*blockIdx.y;
+
+	index = (row + rows*flag / 4)*cols / 2 + col;
+	row += flag*rows / 4;
+	row *= 2;
+	col *= 2;
+
+	unsigned char a = image[index];
+	new_image[(row)*cols + col] = a;
+	new_image[(row)*cols + col + 1] = a;
+	new_image[(row + 1)*cols + col] = a;
+	new_image[(row + 1)*cols + col + 1] = a;
+}
